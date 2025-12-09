@@ -1,0 +1,12 @@
+# File Rahasia (JANGAN DIHAPUS DARI SINI)
+serviceAccountKey.json
+**/serviceAccountKey.json
+.env
+
+# Folder Sampah/Berat(Bisa diinstall ulang)
+node_modules/
+**/node_modules/
+
+# File Sistem
+.DS_Store
+Thumbs.db
