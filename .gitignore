@@ -1,12 +1,16 @@
-# File Rahasia (JANGAN DIHAPUS DARI SINI)
+# --- DAFTAR FILE YANG DILARANG UPLOAD ---
+
+# 1. Folder Sampah (Berat & Bisa di-install ulang)
+node_modules/
+backend/node_modules/
+api/node_modules/
+
+# 2. File Kunci Rahasia (SANGAT PENTING!)
 serviceAccountKey.json
-**/serviceAccountKey.json
+backend/serviceAccountKey.json
+api/serviceAccountKey.json
 .env
 
-# Folder Sampah/Berat(Bisa diinstall ulang)
-node_modules/
-**/node_modules/
-
-# File Sistem
+# 3. File Sistem (Junk)
 .DS_Store
 Thumbs.db
