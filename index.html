@@ -136,17 +136,38 @@
                 return;
             }
 
-            // 3. Susun Pesan WhatsApp
-            // Format: Halo Monokrom, saya [Nama] ingin reservasi untuk [Jumlah] orang pada tanggal [Tanggal].
+           // --- LOGIC RESERVASI: KIRIM KE WHATSAPP ---
+        window.handleBooking = () => {
+            // 1. Cek Login Dulu
+            if (!auth.currentUser && !window.currentUser) {
+                alert("Silakan login terlebih dahulu untuk reservasi!");
+                switchTab('profil');
+                return;
+            }
+
+            // 2. Ambil Data dari Input
+            const dateInput = document.getElementById('booking-date').value;
+            const paxInput = document.getElementById('booking-pax').value;
+            
+            const userName = window.currentUser ? window.currentUser.name : "Pelanggan";
+
+            if (!dateInput || !paxInput) {
+                alert("Mohon lengkapi tanggal dan jumlah orang!");
+                return;
+            }
+
+            // 3. Susun Pesan
             const message = `Halo Admin Monokrom, saya *${userName}* ingin reservasi meja.%0A%0A📅 Tanggal: ${dateInput}%0A👥 Jumlah: ${paxInput} Orang%0A%0AMohon ketersediaannya. Terima kasih!`;
 
-            // 4. Buka Link WhatsApp (Ganti nomornya dengan nomor admin kamu)
-            const phoneNumber = "6285864855878"; // Nomor kamu yg ada di tombol request song tadi
+            // 4. Buka Link WhatsApp (PERHATIKAN TANDA KUTIP ` DI AWAL DAN AKHIR)
+            const phoneNumber = "6285864855878"; 
             const url = `https://wa.me/${phoneNumber}?text=${message}`;
 
             // Buka di tab baru
             window.open(url, '_blank');
         };
+        
+        // --- BATAS SUCI: JANGAN ADA KODE LAIN DI BAWAH INI SEBELUM TAG PENUTUP SCRIPT ---
 
     const btn = document.querySelector('button[onclick="handleBooking()"]');
     const originalText = btn.innerText;
