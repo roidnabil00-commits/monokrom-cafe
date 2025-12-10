@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monokrom Caffe & Bar</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
+        /* CUSTOM STYLES */
         body { background-color: #050505; color: white; overflow-x: hidden; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
@@ -47,11 +49,14 @@
                 <div><span class="text-gray-400 text-[10px] uppercase font-medium">Selamat Datang</span><h1 id="header-username" class="text-xl font-bold text-white text-glow">Tamu</h1></div>
                 <div class="w-10 h-10 rounded-full glass flex items-center justify-center"><i data-lucide="bell" class="w-5 h-5 text-gray-300"></i></div>
             </header>
+            
             <header class="hidden md:flex justify-between items-center px-8 py-5 border-b border-white/5">
                 <h2 id="page-title" class="text-2xl font-bold tracking-tight">Dashboard</h2>
                 <div class="w-10 h-10 rounded-full glass flex items-center justify-center cursor-pointer hover:bg-white/10"><i data-lucide="bell" class="w-5 h-5 text-gray-300"></i></div>
             </header>
+            
             <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar p-4 md:p-8 relative"></main>
+            
             <nav id="mobile-nav" class="md:hidden glass-nav absolute bottom-0 w-full pb-8 pt-4 px-4 flex justify-between z-50 rounded-t-2xl border-t border-white/10"></nav>
         </div>
     </div>
@@ -74,14 +79,14 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // STATE GLOBAL
+        // GLOBAL STATE
         window.eventsList = []; 
         window.currentUser = null;
         window.activeTab = 'home';
         window.isAdmin = false;
-
-        // --- AUTH LOGIC ---
         window.isRegisterMode = false;
+
+        // --- AUTH FUNCTIONS ---
         window.toggleAuthMode = () => { window.isRegisterMode = !window.isRegisterMode; switchTab('profil'); };
         
         window.handleAuth = async (e) => {
@@ -93,71 +98,70 @@
             const name = document.getElementById('input-name').value;
             const email = document.getElementById('input-email').value;
             const pass = document.getElementById('input-pass').value;
-            if(!name) return alert("Nama wajib!");
+            if(!name) return alert("Nama wajib diisi!");
+
+            const btn = e.target.querySelector('button');
+            const oldText = btn.innerText;
+            btn.innerText = "PROSES..."; btn.disabled = true;
+
             try {
                 await createUserWithEmailAndPassword(auth, email, pass);
                 await updateProfile(auth.currentUser, { displayName: name });
-                alert("Berhasil daftar!");
-            } catch(err) { alert(err.message); }
+                alert("Registrasi Berhasil! Selamat Datang.");
+            } catch(err) { 
+                alert("Gagal: " + err.message); 
+                btn.innerText = oldText; btn.disabled = false;
+            }
         };
 
-        // --- 2. LOGIC LOGIN (Updated: Ada Notifikasinya) ---
-        window.handleLogin = async (event) => {
-            event.preventDefault();
+        window.handleLogin = async (e) => {
             const email = document.getElementById('input-email').value;
-            const password = document.getElementById('input-password').value;
-            const btn = event.target.querySelector('button');
-            
+            const pass = document.getElementById('input-pass').value;
+            const btn = e.target.querySelector('button');
+            const oldText = btn.innerText;
+            btn.innerText = "LOADING..."; btn.disabled = true;
+
             try {
-                btn.innerHTML = 'LOADING...';
-                await signInWithEmailAndPassword(auth, email, password);
-                
-                // --- INI TAMBAHANNYA ---
+                await signInWithEmailAndPassword(auth, email, pass);
+                // ALERT LOGIN SUKSES
                 alert("Login Berhasil! Selamat Datang Kembali.");
-                // -----------------------
-                
-                console.log("Login sukses");
-            } catch (error) {
-                console.error(error); // Biar tau errornya di console
-                let msg = "Login Gagal.";
-                
-                // Translate error Firebase biar user ngerti
-                if(error.code === 'auth/invalid-credential') msg = "Email atau Password salah!";
-                if(error.code === 'auth/user-not-found') msg = "Akun tidak ditemukan. Daftar dulu yuk!";
-                if(error.code === 'auth/wrong-password') msg = "Password salah!";
-                
-                alert(msg);
-                btn.innerHTML = 'MASUK SEKARANG';
+            } catch(err) { 
+                alert("Login Gagal: Periksa Email/Password."); 
+                btn.innerText = oldText; btn.disabled = false;
             }
         };
 
         window.handleLogout = async () => { await signOut(auth); };
 
-        // --- RESERVASI LOGIC ---
+        // --- RESERVASI WHATSAPP (FIXED) ---
         window.handleBooking = () => {
-            if (!auth.currentUser) return alert("Login dulu bos!");
+            if (!auth.currentUser) return alert("Silakan Login terlebih dahulu!");
+            
             const date = document.getElementById('booking-date').value;
             const pax = document.getElementById('booking-pax').value;
-            const msg = `Halo Monokrom, saya *${window.currentUser.name}* mau booking meja.%0A%0ATanggal: ${date}%0APax: ${pax} Orang`;
-            window.open(`https://wa.me/6285864855878?text=${msg}`, '_blank');
+            const name = window.currentUser.name;
+
+            // Pesan WA
+            const message = `Halo Monokrom, saya *${name}* ingin reservasi meja.%0A%0ATanggal: ${date}%0APax: ${pax} Orang`;
+            const phone = "6285864855878";
+            
+            // Buka Link (Syntax Fixed)
+            window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
         };
 
-        // --- ADMIN EVENT LOGIC (NEW!) ---
+        // --- EVENT MANAGER (ADMIN) ---
         window.fetchEvents = async () => {
             try {
                 const q = query(collection(db, "events"), orderBy("date", "asc"));
                 const snap = await getDocs(q);
                 window.eventsList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                // Refresh home kalau sedang dibuka
                 if(window.activeTab === 'home') switchTab('home');
-            } catch(e) { console.error("Gagal ambil event:", e); }
+            } catch(e) { console.log(e); }
         };
 
         window.handleAddEvent = async (e) => {
             e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const originalText = btn.innerText;
-            btn.innerText = "UPLOADING..."; 
+            if(!confirm("Upload event ini?")) return;
             
             try {
                 await addDoc(collection(db, "events"), {
@@ -167,60 +171,55 @@
                     img: document.getElementById('evt-img').value,
                     createdAt: serverTimestamp()
                 });
-                alert("Event berhasil diupload!");
+                alert("Sukses Upload!");
                 e.target.reset();
-                await window.fetchEvents(); // Refresh data
-                switchTab('home'); // Pindah ke home buat lihat hasil
-            } catch(err) {
-                alert("Gagal upload: " + err.message);
-            } finally {
-                btn.innerText = originalText;
-            }
+                window.fetchEvents();
+                switchTab('home');
+            } catch(err) { alert("Gagal: " + err.message); }
         };
 
         window.handleDeleteEvent = async (id) => {
-            if(!confirm("Yakin mau hapus event ini?")) return;
+            if(!confirm("Hapus event ini?")) return;
             try {
                 await deleteDoc(doc(db, "events", id));
-                await window.fetchEvents();
-                switchTab('admin'); // Refresh list admin
+                window.fetchEvents();
+                switchTab('admin');
             } catch(e) { alert("Gagal hapus"); }
         };
 
-        // --- AUTH LISTENER ---
+        // --- AUTH STATE LISTENER ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Cek apakah admin (GANTI EMAIL INI DENGAN EMAIL ADMINMU)
-                window.isAdmin = (user.email === 'admin@valify.app' || user.email === 'roidnabil00@gmail.com');
+                // List Email Admin (Ganti/Tambah Email Kamu Disini)
+                const admins = ['admin@valify.app', 'roidnabil00@gmail.com'];
+                window.isAdmin = admins.includes(user.email);
                 
                 window.currentUser = {
                     name: user.displayName || user.email.split('@')[0],
                     email: user.email,
-                    tier: window.isAdmin ? 'ADMINISTRATOR' : 'Member'
+                    tier: window.isAdmin ? 'ADMIN' : 'Member'
                 };
             } else {
                 window.currentUser = null;
                 window.isAdmin = false;
             }
-            window.renderNavigation(); // Update menu nav
+            window.renderNavigation();
             window.updateUIUser();
-            window.fetchEvents(); // Ambil data event
+            window.fetchEvents();
         });
     </script>
 
     <script>
-        // TEMPLATE FUNCTIONS
+        // NAVIGATION RENDER
         const renderNavigation = () => {
-            // Desktop Nav
             const deskNav = document.getElementById('desktop-nav');
             deskNav.innerHTML = `
                 ${renderDeskBtn('home', 'home', 'Beranda')}
                 ${renderDeskBtn('menu', 'coffee', 'Menu')}
                 ${renderDeskBtn('reservasi', 'ticket', 'Reservasi')}
-                ${window.isAdmin ? renderDeskBtn('admin', 'shield-alert', 'Admin Panel', 'text-red-500') : ''} 
+                ${window.isAdmin ? renderDeskBtn('admin', 'shield-alert', 'Admin Panel', 'text-red-500') : ''}
             `;
 
-            // Mobile Nav
             const mobNav = document.getElementById('mobile-nav');
             mobNav.innerHTML = `
                 ${renderMobBtn('home', 'home')}
@@ -231,49 +230,36 @@
             lucide.createIcons();
         }
 
-        const renderDeskBtn = (id, icon, label, colorClass='') => `
+        const renderDeskBtn = (id, icon, label, color='') => `
             <button onclick="switchTab('${id}')" class="desk-nav-btn w-full flex items-center gap-4 px-4 py-3 rounded-xl transition hover:bg-white/5 group ${window.activeTab === id ? 'bg-white/10 text-white' : 'text-gray-400'}" data-tab="${id}">
-                <i data-lucide="${icon}" class="w-5 h-5 ${colorClass} group-hover:text-neon-blue transition-colors"></i>
+                <i data-lucide="${icon}" class="w-5 h-5 ${color} group-hover:text-neon-blue transition-colors"></i>
                 <span class="font-medium">${label}</span>
             </button>`;
 
         const renderMobBtn = (id, icon, isMain=false) => {
-            if(isMain) return `
-                <button onclick="switchTab('${id}')" class="nav-btn w-full flex flex-col items-center justify-center text-gray-500 transition-all group" data-tab="${id}">
-                    <div class="w-12 h-12 -mt-10 bg-gradient-to-tr from-neon-blue to-neon-purple rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(176,38,255,0.5)] border-4 border-black">
-                        <i data-lucide="${icon}" class="w-6 h-6 text-black"></i>
-                    </div>
-                </button>`;
-            return `
-                <button onclick="switchTab('${id}')" class="nav-btn w-full flex flex-col items-center justify-center ${window.activeTab === id ? 'text-white' : 'text-gray-500'} transition-all group" data-tab="${id}">
-                    <i data-lucide="${icon}" class="w-6 h-6 mb-1 group-hover:text-neon-blue"></i>
-                </button>`;
+            if(isMain) return `<button onclick="switchTab('${id}')" class="nav-btn w-full flex flex-col items-center justify-center text-gray-500 transition-all group"><div class="w-12 h-12 -mt-10 bg-gradient-to-tr from-neon-blue to-neon-purple rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(176,38,255,0.5)] border-4 border-black"><i data-lucide="${icon}" class="w-6 h-6 text-black"></i></div></button>`;
+            return `<button onclick="switchTab('${id}')" class="nav-btn w-full flex flex-col items-center justify-center ${window.activeTab === id ? 'text-white' : 'text-gray-500'} transition-all group"><i data-lucide="${icon}" class="w-6 h-6 mb-1 group-hover:text-neon-blue"></i></button>`;
         }
 
-        // --- PAGE RENDERS ---
+        // --- PAGES ---
         const renderHome = () => {
-            const eventsHtml = window.eventsList.length > 0 
-                ? window.eventsList.map(e => `
-                    <a href="#" class="relative block h-64 rounded-2xl overflow-hidden group border border-white/5">
-                        <img src="${e.img}" class="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-110 transition duration-700" onerror="this.src='https://via.placeholder.com/400x300?text=Event'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
-                        <div class="absolute bottom-0 left-0 p-4 w-full">
-                            <span class="text-[10px] font-bold bg-neon-purple text-black px-2 py-1 rounded mb-2 inline-block">${e.date}</span>
-                            <h4 class="font-bold text-lg text-white mb-1">${e.title}</h4>
-                            <p class="text-xs text-gray-300 uppercase">${e.sub}</p>
-                        </div>
-                    </a>
-                `).join('') 
-                : `<div class="col-span-full text-center text-gray-500 py-10">Belum ada event. Admin, tolong upload!</div>`;
+            const eventsHtml = window.eventsList.length > 0 ? window.eventsList.map(e => `
+                <a href="#" class="relative block h-64 rounded-2xl overflow-hidden group border border-white/5">
+                    <img src="${e.img}" class="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-110 transition duration-700" onerror="this.src='https://via.placeholder.com/400?text=Event'">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 p-4 w-full">
+                        <span class="text-[10px] font-bold bg-neon-purple text-black px-2 py-1 rounded mb-2 inline-block">${e.date}</span>
+                        <h4 class="font-bold text-lg text-white mb-1">${e.title}</h4>
+                        <p class="text-xs text-gray-300 uppercase">${e.sub}</p>
+                    </div>
+                </a>`).join('') : `<div class="col-span-full text-center text-gray-500 py-10">Belum ada event.</div>`;
 
             return `
             <div class="animate-fade-in max-w-7xl mx-auto">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                     <div class="lg:col-span-2 relative aspect-video rounded-2xl overflow-hidden group shadow-2xl">
                         <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070" class="absolute inset-0 w-full h-full object-cover opacity-60">
-                        <div class="absolute bottom-0 left-0 p-8">
-                            <h2 class="text-4xl font-bold">MONOKROM <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-neon-purple">NIGHT PARTY</span></h2>
-                        </div>
+                        <div class="absolute bottom-0 left-0 p-8"><h2 class="text-4xl font-bold">MONOKROM <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-neon-purple">NIGHT PARTY</span></h2></div>
                     </div>
                     <div class="glass rounded-2xl p-6 flex flex-col justify-center">
                         <h3 class="font-bold text-lg mb-4">Request Lagu?</h3>
@@ -285,62 +271,47 @@
             </div>`;
         };
 
-        const renderAdmin = () => {
-            const listHtml = window.eventsList.map(e => `
-                <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg mb-2">
-                    <div class="flex items-center gap-3">
-                        <img src="${e.img}" class="w-10 h-10 rounded object-cover">
-                        <div>
-                            <div class="font-bold text-sm">${e.title}</div>
-                            <div class="text-[10px] text-gray-400">${e.date}</div>
-                        </div>
-                    </div>
-                    <button onclick="handleDeleteEvent('${e.id}')" class="text-red-500 hover:text-red-400 text-xs font-bold border border-red-500/30 px-3 py-1 rounded">HAPUS</button>
-                </div>
-            `).join('');
-
-            return `
+        const renderAdmin = () => `
             <div class="max-w-2xl mx-auto">
                 <div class="glass p-8 rounded-3xl mb-8">
                     <h2 class="text-2xl font-bold mb-6 flex items-center gap-2"><i data-lucide="shield-alert" class="text-neon-purple"></i> Admin Event Manager</h2>
                     <form onsubmit="handleAddEvent(event)" class="space-y-4">
-                        <div><label class="text-xs text-gray-500">JUDUL EVENT</label><input id="evt-title" type="text" class="w-full bg-black/50 border border-white/10 p-3 rounded-xl text-white" placeholder="Contoh: Indie Night" required></div>
-                        <div><label class="text-xs text-gray-500">SUB JUDUL</label><input id="evt-sub" type="text" class="w-full bg-black/50 border border-white/10 p-3 rounded-xl text-white" placeholder="Contoh: Special Guest..." required></div>
+                        <div><label class="text-xs text-gray-500">JUDUL</label><input id="evt-title" type="text" class="w-full bg-black/50 border border-white/10 p-3 rounded-xl text-white" required></div>
+                        <div><label class="text-xs text-gray-500">SUB JUDUL</label><input id="evt-sub" type="text" class="w-full bg-black/50 border border-white/10 p-3 rounded-xl text-white" required></div>
                         <div class="grid grid-cols-2 gap-4">
-                            <div><label class="text-xs text-gray-500">TANGGAL (Teks Bebas)</label><input id="evt-date" type="text" class="w-full bg-black/50 border border-white/10 p-3 rounded-xl text-white" placeholder="09 DEC" required></div>
+                            <div><label class="text-xs text-gray-500">TANGGAL</label><input id="evt-date" type="text" class="w-full bg-black/50 border border-white/10 p-3 rounded-xl text-white" placeholder="09 DEC" required></div>
                             <div><label class="text-xs text-gray-500">URL GAMBAR</label><input id="evt-img" type="text" class="w-full bg-black/50 border border-white/10 p-3 rounded-xl text-white" placeholder="https://..." required></div>
                         </div>
-                        <button type="submit" class="w-full py-4 bg-neon-purple text-black font-bold rounded-xl hover:bg-white transition">UPLOAD EVENT</button>
+                        <button type="submit" class="w-full py-4 bg-neon-purple text-black font-bold rounded-xl hover:bg-white transition">UPLOAD</button>
                     </form>
                 </div>
-                <div>
-                    <h3 class="font-bold mb-4">Event Aktif (${window.eventsList.length})</h3>
-                    ${listHtml || '<p class="text-gray-500 text-sm">Belum ada event.</p>'}
+                <h3 class="font-bold mb-4">Event Aktif (${window.eventsList.length})</h3>
+                <div class="space-y-2">
+                    ${window.eventsList.map(e => `<div class="flex justify-between items-center p-3 bg-white/5 rounded-lg"><span>${e.title}</span><button onclick="handleDeleteEvent('${e.id}')" class="text-red-500 text-xs border border-red-500/50 px-2 py-1 rounded">HAPUS</button></div>`).join('')}
                 </div>
             </div>`;
-        };
 
         const renderMenu = () => `
             <div class="animate-fade-in max-w-7xl mx-auto">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    ${renderMenuCategory('FOOD', 'Main Course', 'food.jpg', '#LINK_FOOD')}
-                    ${renderMenuCategory('BEVERAGE', 'Coffee & Alcohol', 'beverage.jpg', '#LINK_DRINK')}
-                    ${renderMenuCategory('CIGARETTE', 'Premium', 'cigarette.jpg', '#LINK_CIGAR')}
+                    ${renderMenuCategory('FOOD', 'Main Course', 'food.jpg', 'https://wa.me/6285864855878?text=Menu%20Food')}
+                    ${renderMenuCategory('BEVERAGE', 'Coffee & Alcohol', 'beverage.jpg', 'https://wa.me/6285864855878?text=Menu%20Beverage')}
+                    ${renderMenuCategory('CIGARETTE', 'Premium', 'cigarette.jpg', 'https://wa.me/6285864855878?text=List%20Rokok')}
                 </div>
             </div>`;
-        
-        const renderMenuCategory = (t, s, i, l) => `<a href="${l}" class="block relative h-64 rounded-2xl overflow-hidden group"><img src="${i}" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition duration-700"><div class="absolute bottom-6 left-6"><h3 class="text-3xl font-black">${t}</h3><p>${s}</p></div></a>`;
+        const renderMenuCategory = (t, s, i, l) => `<a href="${l}" target="_blank" class="block relative h-64 rounded-2xl overflow-hidden group"><img src="${i}" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition duration-700"><div class="absolute bottom-6 left-6"><h3 class="text-3xl font-black">${t}</h3><p>${s}</p></div></a>`;
 
         const renderReservasi = () => {
             const today = new Date().toISOString().split('T')[0];
             return `
             <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center h-full">
-                <div class="glass p-2 rounded-3xl"><img src="vegas.png" class="rounded-xl w-full"></div>
+                <div class="glass p-2 rounded-3xl"><img src="vegas.png" class="rounded-xl w-full" onerror="this.src='https://via.placeholder.com/500?text=Denah'"></div>
                 <div class="space-y-4">
                     <h2 class="text-3xl font-bold">Reservasi Meja</h2>
+                    <p class="text-gray-400">Pesan meja langsung via WhatsApp.</p>
                     <div class="glass p-4 rounded-xl"><label class="text-xs text-gray-500">TANGGAL</label><input id="booking-date" type="date" value="${today}" class="w-full bg-transparent font-bold text-white focus:outline-none"></div>
-                    <div class="glass p-4 rounded-xl"><label class="text-xs text-gray-500">PAX</label><input id="booking-pax" type="number" value="2" class="w-full bg-transparent font-bold text-white focus:outline-none"></div>
-                    <button onclick="handleBooking()" class="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-green-500 hover:text-white transition">BOOK VIA WHATSAPP</button>
+                    <div class="glass p-4 rounded-xl"><label class="text-xs text-gray-500">PAX (ORANG)</label><input id="booking-pax" type="number" value="2" class="w-full bg-transparent font-bold text-white focus:outline-none"></div>
+                    <button onclick="handleBooking()" class="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-green-500 hover:text-white transition flex justify-center gap-2"><i data-lucide="message-circle"></i> BOOK VIA WHATSAPP</button>
                 </div>
             </div>`;
         };
@@ -401,10 +372,10 @@
             }
         };
 
-        // STARTUP
+        // INITIALIZE
         window.onload = () => {
             switchTab('home');
-            window.fetchEvents(); // Fetch data pertama kali
+            window.fetchEvents();
         };
     </script>
 </body>
