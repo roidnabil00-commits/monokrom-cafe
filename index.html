@@ -21,26 +21,24 @@
         import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
-  apiKey: "AIzaSyAFzNqqAJKueJzo1Ftd35EEk__cJZrnBLM",
-  authDomain: "valify-saas-engine.firebaseapp.com",
-  projectId: "valify-saas-engine",
-  storageBucket: "valify-saas-engine.firebasestorage.app",
-  messagingSenderId: "216404932408",
-  appId: "1:216404932408:web:10d5e1267ea3e8493db3cd"
-};
-         const app = initializeApp(firebaseConfig);
+          apiKey: "AIzaSyAFzNqqAJKueJzo1Ftd35EEk__cJZrnBLM",
+          authDomain: "valify-saas-engine.firebaseapp.com",
+          projectId: "valify-saas-engine",
+          storageBucket: "valify-saas-engine.firebasestorage.app",
+          messagingSenderId: "216404932408",
+          appId: "1:216404932408:web:10d5e1267ea3e8493db3cd"
+        };
+        
+        const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // 4. EXPORT FUNGSI KE GLOBAL WINDOW (Agar bisa dipanggil onclick HTML)
-        
-        // --- LOGIC LOGIN ---
-        // --- LOGIC TAMBAHAN: REGISTER & MODE SWITCH ---
-        window.isRegisterMode = false; // Status apakah sedang mode Daftar atau Login
+        // --- 1. LOGIC REGISTER & SWITCH MODE ---
+        window.isRegisterMode = false;
 
         window.toggleAuthMode = () => {
             window.isRegisterMode = !window.isRegisterMode;
-            switchTab('profil'); // Refresh tampilan
+            switchTab('profil');
         };
 
         window.handleAuth = async (event) => {
@@ -64,28 +62,23 @@
             try {
                 btn.innerHTML = 'MENDAFTAR...';
                 btn.disabled = true;
-
-                // 1. Buat Akun di Firebase
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
-
-                // 2. Update Nama Profil (Display Name)
                 await updateProfile(user, { displayName: name });
-
                 console.log("Register sukses:", user);
                 alert("Selamat datang, " + name + "!");
-                // onAuthStateChanged akan otomatis menangani redirect ke Home
             } catch (error) {
                 console.error(error);
                 let msg = "Gagal Daftar.";
                 if(error.code === 'auth/email-already-in-use') msg = "Email sudah terdaftar!";
-                if(error.code === 'auth/weak-password') msg = "Password terlalu lemah (min 6 karakter).";
+                if(error.code === 'auth/weak-password') msg = "Password terlalu lemah.";
                 alert(msg);
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         };
 
+        // --- 2. LOGIC LOGIN ---
         window.handleLogin = async (event) => {
             event.preventDefault();
             const email = document.getElementById('input-email').value;
@@ -94,17 +87,15 @@
             
             try {
                 btn.innerHTML = 'LOADING...';
-                // Ini memanggil Backend Firebase untuk cek password
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                console.log("Login sukses:", userCredential.user);
-                // Redirect otomatis ditangani oleh onAuthStateChanged
+                await signInWithEmailAndPassword(auth, email, password);
+                console.log("Login sukses");
             } catch (error) {
                 alert("Login Gagal: " + error.message);
                 btn.innerHTML = 'MASUK SEKARANG';
             }
         };
 
-        // --- LOGIC LOGOUT ---
+        // --- 3. LOGIC LOGOUT ---
         window.handleLogout = async () => {
             try {
                 await signOut(auth);
@@ -114,21 +105,17 @@
             }
         };
 
-        // --- LOGIC RESERVASI (SIMPAN KE DATABASE) ---
-        // --- LOGIC RESERVASI: KIRIM KE WHATSAPP ---
+        // --- 4. LOGIC RESERVASI KE WHATSAPP (SUDAH DIPERBAIKI) ---
         window.handleBooking = () => {
-            // 1. Cek Login Dulu
+            // Cek Login
             if (!auth.currentUser && !window.currentUser) {
                 alert("Silakan login terlebih dahulu untuk reservasi!");
                 switchTab('profil');
                 return;
             }
 
-            // 2. Ambil Data dari Input yang sudah diedit user
             const dateInput = document.getElementById('booking-date').value;
             const paxInput = document.getElementById('booking-pax').value;
-            
-            // Ambil nama user (jika ada display name pakai itu, jika tidak pakai 'Tamu')
             const userName = window.currentUser ? window.currentUser.name : "Pelanggan";
 
             if (!dateInput || !paxInput) {
@@ -136,99 +123,34 @@
                 return;
             }
 
-           // --- LOGIC RESERVASI: KIRIM KE WHATSAPP ---
-        window.handleBooking = () => {
-            // 1. Cek Login Dulu
-            if (!auth.currentUser && !window.currentUser) {
-                alert("Silakan login terlebih dahulu untuk reservasi!");
-                switchTab('profil');
-                return;
-            }
-
-            // 2. Ambil Data dari Input
-            const dateInput = document.getElementById('booking-date').value;
-            const paxInput = document.getElementById('booking-pax').value;
-            
-            const userName = window.currentUser ? window.currentUser.name : "Pelanggan";
-
-            if (!dateInput || !paxInput) {
-                alert("Mohon lengkapi tanggal dan jumlah orang!");
-                return;
-            }
-
-            // 3. Susun Pesan
+            // Susun Pesan
             const message = `Halo Admin Monokrom, saya *${userName}* ingin reservasi meja.%0A%0A📅 Tanggal: ${dateInput}%0A👥 Jumlah: ${paxInput} Orang%0A%0AMohon ketersediaannya. Terima kasih!`;
 
-            // 4. Buka Link WhatsApp (PERHATIKAN TANDA KUTIP ` DI AWAL DAN AKHIR)
+            // Buka Link WA (Syntax sudah benar)
             const phoneNumber = "6285864855878"; 
             const url = `https://wa.me/${phoneNumber}?text=${message}`;
 
-            // Buka di tab baru
             window.open(url, '_blank');
         };
-        
-        // --- BATAS SUCI: JANGAN ADA KODE LAIN DI BAWAH INI SEBELUM TAG PENUTUP SCRIPT ---
 
-    const btn = document.querySelector('button[onclick="handleBooking()"]');
-    const originalText = btn.innerText;
-    
-    try {
-        btn.innerText = "PROSES...";
-        btn.disabled = true;
-
-        // 1. Ambil Token Autentikasi User (JWT)
-        // Ini kuncinya: Token ini bukti identitas user yang aman
-        const idToken = await auth.currentUser.getIdToken();
-
-        // 2. Kirim Request ke Backend Localhost
-        const response = await fetch('/api/reservations',{
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': idToken // Kirim token di header
-            },
-            body: JSON.stringify({
-                date: new Date().toISOString(), // Kirim tanggal
-                pax: 2 
-            })
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            alert("Sukses! " + result.message);
-        } else {
-            throw new Error(result.error || "Gagal booking");
-        }
-
-    } catch (e) {
-        console.error("Error booking: ", e);
-        alert("Gagal: " + e.message);
-    } finally {
-        btn.innerText = originalText;
-        btn.disabled = false;
-    }
-};
-
-        // --- PEMANTAU STATUS USER (Real-time) ---
+        // --- 5. PEMANTAU USER ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Pakai displayName jika ada (dari proses Register), kalau tidak ada pakai email
                 const displayName = user.displayName || user.email.split('@')[0];
-                
                 window.currentUser = {
                     name: displayName,
                     email: user.email,
                     tier: 'Gold Member'
                 };
-                window.updateUIUser();
+                window.updateUIUser(); // Update tampilan
+                
+                // Redirect ke home HANYA jika sedang di halaman login/profil
                 if (window.activeTab === 'profil') window.switchTab('home');
             } else {
                 window.currentUser = null;
                 window.updateUIUser();
             }
         });
-    </script>
 
     <script>
         // KONFIGURASI TAILWIND CUSTOM
