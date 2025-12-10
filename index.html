@@ -101,12 +101,34 @@
             } catch(err) { alert(err.message); }
         };
 
-        window.handleLogin = async (e) => {
+        // --- 2. LOGIC LOGIN (Updated: Ada Notifikasinya) ---
+        window.handleLogin = async (event) => {
+            event.preventDefault();
             const email = document.getElementById('input-email').value;
-            const pass = document.getElementById('input-pass').value;
+            const password = document.getElementById('input-password').value;
+            const btn = event.target.querySelector('button');
+            
             try {
-                await signInWithEmailAndPassword(auth, email, pass);
-            } catch(err) { alert("Login gagal: " + err.message); }
+                btn.innerHTML = 'LOADING...';
+                await signInWithEmailAndPassword(auth, email, password);
+                
+                // --- INI TAMBAHANNYA ---
+                alert("Login Berhasil! Selamat Datang Kembali.");
+                // -----------------------
+                
+                console.log("Login sukses");
+            } catch (error) {
+                console.error(error); // Biar tau errornya di console
+                let msg = "Login Gagal.";
+                
+                // Translate error Firebase biar user ngerti
+                if(error.code === 'auth/invalid-credential') msg = "Email atau Password salah!";
+                if(error.code === 'auth/user-not-found') msg = "Akun tidak ditemukan. Daftar dulu yuk!";
+                if(error.code === 'auth/wrong-password') msg = "Password salah!";
+                
+                alert(msg);
+                btn.innerHTML = 'MASUK SEKARANG';
+            }
         };
 
         window.handleLogout = async () => { await signOut(auth); };
