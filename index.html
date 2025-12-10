@@ -14,7 +14,7 @@
         body { background-color: #050505; color: white; overflow-x: hidden; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .glass-nav { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-nav { background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.1); }
         .text-glow { text-shadow: 0 0 10px rgba(176, 38, 255, 0.5); }
         .ambient-light { position: fixed; width: 500px; height: 500px; border-radius: 50%; filter: blur(100px); opacity: 0.15; z-index: -1; pointer-events: none; }
     </style>
@@ -55,9 +55,9 @@
                 <div class="w-10 h-10 rounded-full glass flex items-center justify-center cursor-pointer hover:bg-white/10"><i data-lucide="bell" class="w-5 h-5 text-gray-300"></i></div>
             </header>
             
-            <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar p-4 md:p-8 relative"></main>
+            <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar p-4 md:p-8 relative pb-32"></main>
             
-            <nav id="mobile-nav" class="md:hidden glass-nav absolute bottom-0 w-full pb-8 pt-4 px-4 flex justify-between z-50 rounded-t-2xl border-t border-white/10"></nav>
+            <nav id="mobile-nav" class="md:hidden glass-nav absolute bottom-0 w-full pb-6 pt-3 px-2 flex justify-between z-50 rounded-t-2xl border-t border-white/10"></nav>
         </div>
     </div>
 
@@ -123,7 +123,6 @@
 
             try {
                 await signInWithEmailAndPassword(auth, email, pass);
-                // ALERT LOGIN SUKSES
                 alert("Login Berhasil! Selamat Datang Kembali.");
             } catch(err) { 
                 alert("Login Gagal: Periksa Email/Password."); 
@@ -141,11 +140,11 @@
             const pax = document.getElementById('booking-pax').value;
             const name = window.currentUser.name;
 
-            // Pesan WA
+            if (!date || !pax) return alert("Mohon lengkapi data reservasi!");
+
             const message = `Halo Monokrom, saya *${name}* ingin reservasi meja.%0A%0ATanggal: ${date}%0APax: ${pax} Orang`;
             const phone = "6285864855878";
             
-            // Buka Link (Syntax Fixed)
             window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
         };
 
@@ -190,7 +189,7 @@
         // --- AUTH STATE LISTENER ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // List Email Admin (Ganti/Tambah Email Kamu Disini)
+                // List Email Admin
                 const admins = ['admin@valify.app', 'roidnabil00@gmail.com'];
                 window.isAdmin = admins.includes(user.email);
                 
@@ -210,22 +209,24 @@
     </script>
 
     <script>
-        // NAVIGATION RENDER
+        // NAVIGATION RENDER (UPDATED: ADA TULISAN MENU & WARNA)
         const renderNavigation = () => {
             const deskNav = document.getElementById('desktop-nav');
             deskNav.innerHTML = `
                 ${renderDeskBtn('home', 'home', 'Beranda')}
                 ${renderDeskBtn('menu', 'coffee', 'Menu')}
                 ${renderDeskBtn('reservasi', 'ticket', 'Reservasi')}
+                ${renderDeskBtn('event', 'calendar', 'Event')}
                 ${window.isAdmin ? renderDeskBtn('admin', 'shield-alert', 'Admin Panel', 'text-red-500') : ''}
             `;
 
             const mobNav = document.getElementById('mobile-nav');
             mobNav.innerHTML = `
-                ${renderMobBtn('home', 'home')}
-                ${renderMobBtn('menu', 'coffee')}
-                ${renderMobBtn('reservasi', 'ticket', true)}
-                ${window.isAdmin ? renderMobBtn('admin', 'shield-alert') : renderMobBtn('profil', 'user')}
+                ${renderMobBtn('home', 'home', 'Beranda')}
+                ${renderMobBtn('menu', 'coffee', 'Menu')}
+                ${renderMobBtn('reservasi', 'ticket', 'Reservasi', true)}
+                ${renderMobBtn('event', 'calendar', 'Event')}
+                ${window.isAdmin ? renderMobBtn('admin', 'shield-alert', 'Admin') : renderMobBtn('profil', 'user', 'Profil')}
             `;
             lucide.createIcons();
         }
@@ -236,9 +237,24 @@
                 <span class="font-medium">${label}</span>
             </button>`;
 
-        const renderMobBtn = (id, icon, isMain=false) => {
-            if(isMain) return `<button onclick="switchTab('${id}')" class="nav-btn w-full flex flex-col items-center justify-center text-gray-500 transition-all group"><div class="w-12 h-12 -mt-10 bg-gradient-to-tr from-neon-blue to-neon-purple rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(176,38,255,0.5)] border-4 border-black"><i data-lucide="${icon}" class="w-6 h-6 text-black"></i></div></button>`;
-            return `<button onclick="switchTab('${id}')" class="nav-btn w-full flex flex-col items-center justify-center ${window.activeTab === id ? 'text-white' : 'text-gray-500'} transition-all group"><i data-lucide="${icon}" class="w-6 h-6 mb-1 group-hover:text-neon-blue"></i></button>`;
+        // TOMBOL HP: ADA LOGO + TULISAN
+        const renderMobBtn = (id, icon, label, isMain=false) => {
+            const activeColor = window.activeTab === id ? 'text-white' : 'text-gray-500';
+            const iconColor = window.activeTab === id ? 'text-neon-blue' : 'text-gray-500';
+
+            if(isMain) return `
+                <button onclick="switchTab('${id}')" class="nav-btn w-full flex flex-col items-center justify-center transition-all group -mt-8">
+                    <div class="w-14 h-14 bg-gradient-to-tr from-neon-blue to-neon-purple rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(176,38,255,0.5)] border-4 border-black mb-1">
+                        <i data-lucide="${icon}" class="w-6 h-6 text-black"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-white tracking-wide">${label}</span>
+                </button>`;
+            
+            return `
+                <button onclick="switchTab('${id}')" class="nav-btn w-full flex flex-col items-center justify-center gap-1 transition-all group">
+                    <i data-lucide="${icon}" class="w-5 h-5 ${iconColor} group-hover:text-neon-blue transition-colors"></i>
+                    <span class="text-[10px] font-medium ${activeColor}">${label}</span>
+                </button>`;
         }
 
         // --- PAGES ---
@@ -255,7 +271,7 @@
                 </a>`).join('') : `<div class="col-span-full text-center text-gray-500 py-10">Belum ada event.</div>`;
 
             return `
-            <div class="animate-fade-in max-w-7xl mx-auto">
+            <div class="animate-fade-in max-w-7xl mx-auto pb-10">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                     <div class="lg:col-span-2 relative aspect-video rounded-2xl overflow-hidden group shadow-2xl">
                         <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070" class="absolute inset-0 w-full h-full object-cover opacity-60">
@@ -272,7 +288,7 @@
         };
 
         const renderAdmin = () => `
-            <div class="max-w-2xl mx-auto">
+            <div class="max-w-2xl mx-auto pb-10">
                 <div class="glass p-8 rounded-3xl mb-8">
                     <h2 class="text-2xl font-bold mb-6 flex items-center gap-2"><i data-lucide="shield-alert" class="text-neon-purple"></i> Admin Event Manager</h2>
                     <form onsubmit="handleAddEvent(event)" class="space-y-4">
@@ -292,7 +308,7 @@
             </div>`;
 
         const renderMenu = () => `
-            <div class="animate-fade-in max-w-7xl mx-auto">
+            <div class="animate-fade-in max-w-7xl mx-auto pb-10">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     ${renderMenuCategory('FOOD', 'Main Course', 'food.jpg', 'https://wa.me/6285864855878?text=Menu%20Food')}
                     ${renderMenuCategory('BEVERAGE', 'Coffee & Alcohol', 'beverage.jpg', 'https://wa.me/6285864855878?text=Menu%20Beverage')}
@@ -304,7 +320,7 @@
         const renderReservasi = () => {
             const today = new Date().toISOString().split('T')[0];
             return `
-            <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center h-full">
+            <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center h-full pb-10">
                 <div class="glass p-2 rounded-3xl"><img src="vegas.png" class="rounded-xl w-full" onerror="this.src='https://via.placeholder.com/500?text=Denah'"></div>
                 <div class="space-y-4">
                     <h2 class="text-3xl font-bold">Reservasi Meja</h2>
@@ -318,7 +334,7 @@
 
         const renderProfil = () => {
             if (window.currentUser) {
-                return `<div class="max-w-md mx-auto pt-10 text-center glass p-8 rounded-3xl">
+                return `<div class="max-w-md mx-auto pt-10 text-center glass p-8 rounded-3xl pb-10">
                     <div class="w-20 h-20 mx-auto bg-gray-700 rounded-full flex items-center justify-center text-2xl font-bold mb-4 border-2 border-neon-purple">${window.currentUser.name[0]}</div>
                     <h2 class="text-2xl font-bold">${window.currentUser.name}</h2>
                     <p class="text-gray-400 text-sm mb-4">${window.currentUser.email}</p>
@@ -326,7 +342,7 @@
                     <button onclick="handleLogout()" class="w-full mt-8 py-3 bg-red-500/20 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition">KELUAR</button>
                 </div>`;
             } else {
-                return `<div class="max-w-sm mx-auto h-full flex items-center justify-center">
+                return `<div class="max-w-sm mx-auto h-full flex items-center justify-center pb-10">
                     <form onsubmit="handleAuth(event)" class="w-full space-y-4">
                         <h1 class="text-3xl font-bold text-center mb-8">${window.isRegisterMode ? 'Daftar Baru' : 'Login Member'}</h1>
                         ${window.isRegisterMode ? '<input id="input-name" type="text" placeholder="Nama Kamu" class="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white" required>' : ''}
@@ -345,6 +361,7 @@
                 id === 'home' ? renderHome() :
                 id === 'menu' ? renderMenu() :
                 id === 'reservasi' ? renderReservasi() :
+                id === 'event' ? renderHome() : // Pake Home dulu sementara
                 id === 'admin' ? renderAdmin() : renderProfil();
             
             document.getElementById('page-title').innerText = id.toUpperCase();
