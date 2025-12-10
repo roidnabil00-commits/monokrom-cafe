@@ -342,10 +342,40 @@
 
         const renderMenu = () => `
             <div class="animate-fade-in max-w-7xl mx-auto">
+                
+                <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                    <div class="relative w-full md:w-96 group">
+                        <input type="text" placeholder="Cari menu favorit..." class="w-full bg-white/5 border border-white/10 rounded-full py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-neon-purple transition-colors">
+                        <i data-lucide="search" class="absolute left-4 top-3 w-4 h-4 text-gray-500 group-focus-within:text-neon-purple transition-colors"></i>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-4 py-2 rounded-full bg-white text-black text-xs font-bold">Categories</span>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    ${renderMenuCategoryLarge('FOOD', 'Main Course', 'food.jpg', '#')}
-                    ${renderMenuCategoryLarge('BEVERAGE', 'Coffee & Alcohol', 'beverage.jpg', '#')}
-                    ${renderMenuCategoryLarge('CIGARETTE', 'Premium Selection', 'cigarette.jpg', '#')}
+                    
+                    ${renderMenuCategoryLarge(
+                        'FOOD', 
+                        'Main Course & Snacks', 
+                        'food.jpg', 
+                        'https://wa.me/6285864855878?text=Halo%20kak%20mau%20lihat%20menu%20makanan' // <--- TEMPAT KOSONG 1: Ganti dengan link menu makananmu
+                    )}
+
+                    ${renderMenuCategoryLarge(
+                        'BEVERAGE', 
+                        'Coffee, Mocktail & Alcohol', 
+                        'beverage.jpg', 
+                        'https://wa.me/6285864855878?text=Halo%20kak%20mau%20lihat%20menu%20makanan' // <--- TEMPAT KOSONG 2: Ganti dengan link menu minumanmu
+                    )}
+
+                    ${renderMenuCategoryLarge(
+                        'CIGARETTE', 
+                        'Premium Selection', 
+                        'cigarette.jpg', 
+                        'https://wa.me/6285864855878?text=Halo%20kak%20mau%20lihat%20menu%20makanan'   // <--- TEMPAT KOSONG 3: Ganti dengan link list rokok
+                    )}
+
                 </div>
             </div>
         `;
