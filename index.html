@@ -132,7 +132,7 @@
 
         window.handleLogout = async () => { await signOut(auth); };
 
-        // --- RESERVASI WHATSAPP (FIXED) ---
+        // --- RESERVASI WHATSAPP ---
         window.handleBooking = () => {
             if (!auth.currentUser) return alert("Silakan Login terlebih dahulu!");
             
@@ -189,7 +189,6 @@
         // --- AUTH STATE LISTENER ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // List Email Admin
                 const admins = ['admin@valify.app', 'roidnabil00@gmail.com'];
                 window.isAdmin = admins.includes(user.email);
                 
@@ -209,7 +208,7 @@
     </script>
 
     <script>
-        // NAVIGATION RENDER (UPDATED: ADA TULISAN MENU & WARNA)
+        // NAVIGATION RENDER
         const renderNavigation = () => {
             const deskNav = document.getElementById('desktop-nav');
             deskNav.innerHTML = `
@@ -237,9 +236,8 @@
                 <span class="font-medium">${label}</span>
             </button>`;
 
-        // TOMBOL HP: ADA LOGO + TULISAN
         const renderMobBtn = (id, icon, label, isMain=false) => {
-            const activeColor = window.activeTab === id ? 'text-white' : 'text-gray-500';
+            const activeClass = window.activeTab === id ? 'text-white' : 'text-gray-500';
             const iconColor = window.activeTab === id ? 'text-neon-blue' : 'text-gray-500';
 
             if(isMain) return `
@@ -253,7 +251,7 @@
             return `
                 <button onclick="switchTab('${id}')" class="nav-btn w-full flex flex-col items-center justify-center gap-1 transition-all group">
                     <i data-lucide="${icon}" class="w-5 h-5 ${iconColor} group-hover:text-neon-blue transition-colors"></i>
-                    <span class="text-[10px] font-medium ${activeColor}">${label}</span>
+                    <span class="text-[10px] font-medium ${activeClass}">${label}</span>
                 </button>`;
         }
 
@@ -317,17 +315,42 @@
             </div>`;
         const renderMenuCategory = (t, s, i, l) => `<a href="${l}" target="_blank" class="block relative h-64 rounded-2xl overflow-hidden group"><img src="${i}" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition duration-700"><div class="absolute bottom-6 left-6"><h3 class="text-3xl font-black">${t}</h3><p>${s}</p></div></a>`;
 
+        // SCROLL FIX APPLIED HERE: py-10 instead of h-full/justify-center
         const renderReservasi = () => {
             const today = new Date().toISOString().split('T')[0];
             return `
-            <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-center h-full pb-10">
-                <div class="glass p-2 rounded-3xl"><img src="vegas.png" class="rounded-xl w-full" onerror="this.src='https://via.placeholder.com/500?text=Denah'"></div>
-                <div class="space-y-4">
-                    <h2 class="text-3xl font-bold">Reservasi Meja</h2>
-                    <p class="text-gray-400">Pesan meja langsung via WhatsApp.</p>
-                    <div class="glass p-4 rounded-xl"><label class="text-xs text-gray-500">TANGGAL</label><input id="booking-date" type="date" value="${today}" class="w-full bg-transparent font-bold text-white focus:outline-none"></div>
-                    <div class="glass p-4 rounded-xl"><label class="text-xs text-gray-500">PAX (ORANG)</label><input id="booking-pax" type="number" value="2" class="w-full bg-transparent font-bold text-white focus:outline-none"></div>
-                    <button onclick="handleBooking()" class="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-green-500 hover:text-white transition flex justify-center gap-2"><i data-lucide="message-circle"></i> BOOK VIA WHATSAPP</button>
+            <div class="animate-fade-in max-w-7xl mx-auto py-10"> 
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+                    <div class="glass p-2 rounded-3xl relative group overflow-hidden">
+                        <div class="relative aspect-square rounded-2xl overflow-hidden border border-white/10">
+                            <img src="vegas.png" class="object-cover w-full h-full opacity-80 group-hover:opacity-100 transition duration-700" alt="Floor Plan" onerror="this.src='https://images.unsplash.com/photo-1572116469696-31de0f17cc34?q=80&w=1974'">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
+                            <div class="absolute bottom-6 left-0 w-full text-center">
+                                <h3 class="text-xl font-bold tracking-widest text-glow">FLOOR PLAN</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                        <div>
+                            <h2 class="text-4xl font-bold mb-2">Reservasi Meja</h2>
+                            <p class="text-gray-400">Isi detail di bawah untuk booking via WhatsApp.</p>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="glass p-4 rounded-xl border border-white/10">
+                                    <label class="block text-[10px] uppercase text-gray-500 mb-1">Tanggal</label>
+                                    <input type="date" id="booking-date" min="${today}" value="${today}" class="bg-transparent text-white font-bold w-full focus:outline-none">
+                                </div>
+                                <div class="glass p-4 rounded-xl border border-white/10">
+                                    <label class="block text-[10px] uppercase text-gray-500 mb-1">Orang (Pax)</label>
+                                    <input type="number" id="booking-pax" min="1" max="20" value="2" class="bg-transparent text-white font-bold w-full focus:outline-none">
+                                </div>
+                            </div>
+                            <button onclick="handleBooking()" class="w-full py-4 bg-white text-black font-bold rounded-xl text-lg hover:bg-green-500 hover:text-white transition flex items-center justify-center gap-2">
+                                <i data-lucide="message-circle" class="w-5 h-5"></i> BOOK VIA WHATSAPP
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>`;
         };
@@ -361,7 +384,7 @@
                 id === 'home' ? renderHome() :
                 id === 'menu' ? renderMenu() :
                 id === 'reservasi' ? renderReservasi() :
-                id === 'event' ? renderHome() : // Pake Home dulu sementara
+                id === 'event' ? renderHome() : // Using home for event temporarily
                 id === 'admin' ? renderAdmin() : renderProfil();
             
             document.getElementById('page-title').innerText = id.toUpperCase();
