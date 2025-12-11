@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monokrom V2 - Fixed</title> 
+    <title>Monokrom Caffe & Bar</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -18,7 +18,6 @@
         .text-glow { text-shadow: 0 0 10px rgba(176, 38, 255, 0.5); }
         .ambient-light { position: fixed; width: 500px; height: 500px; border-radius: 50%; filter: blur(100px); opacity: 0.15; z-index: -1; pointer-events: none; }
     </style>
-    
     <script>
         tailwind.config = {
             theme: { extend: { fontFamily: { sans: ['Space Grotesk', 'sans-serif'] }, colors: { 'mono-black': '#050505', 'neon-purple': '#b026ff', 'neon-blue': '#26f7ff' }, animation: { 'pulse-slow': 'pulse 4s infinite', 'blob': 'blob 7s infinite' }, keyframes: { blob: { '0%': { transform: 'translate(0px, 0px) scale(1)' }, '33%': { transform: 'translate(30px, -50px) scale(1.1)' }, '66%': { transform: 'translate(-20px, 20px) scale(0.9)' }, '100%': { transform: 'translate(0px, 0px) scale(1)' } } } } }
@@ -40,10 +39,7 @@
             <div onclick="switchTab('profil')" class="mt-auto pt-6 border-t border-white/10 cursor-pointer hover:bg-white/5 p-2 rounded-xl transition">
                 <div class="flex items-center gap-3">
                     <div id="desk-avatar" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center border border-gray-600 text-sm font-bold">T</div>
-                    <div class="overflow-hidden">
-                        <h4 id="desk-username" class="text-sm font-bold truncate">Tamu</h4>
-                        <p id="desk-role" class="text-[10px] text-gray-400 truncate">Klik untuk Login</p>
-                    </div>
+                    <div class="overflow-hidden"><h4 id="desk-username" class="text-sm font-bold truncate">Tamu</h4><p id="desk-role" class="text-[10px] text-gray-400 truncate">Klik untuk Login</p></div>
                 </div>
             </div>
         </aside>
@@ -70,7 +66,6 @@
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 1. CONFIG FIREBASE
         const firebaseConfig = {
           apiKey: "AIzaSyAFzNqqAJKueJzo1Ftd35EEk__cJZrnBLM",
           authDomain: "valify-saas-engine.firebaseapp.com",
@@ -84,7 +79,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // 2. GLOBAL STATE
+        // GLOBAL STATE
         window.eventsList = []; 
         window.currentUser = null;
         window.activeTab = 'home';
@@ -92,7 +87,7 @@
         window.isRegisterMode = false;
 
         // --- AUTH FUNCTIONS ---
-        window.toggleAuthMode = () => { window.isRegisterMode = !window.isRegisterMode; window.switchTab('profil'); };
+        window.toggleAuthMode = () => { window.isRegisterMode = !window.isRegisterMode; switchTab('profil'); };
         
         window.handleAuth = async (e) => {
             e.preventDefault();
@@ -113,7 +108,6 @@
                 await createUserWithEmailAndPassword(auth, email, pass);
                 await updateProfile(auth.currentUser, { displayName: name });
                 alert("Registrasi Berhasil! Selamat Datang.");
-                // onAuthStateChanged will handle UI update
             } catch(err) { 
                 alert("Gagal: " + err.message); 
                 btn.innerText = oldText; btn.disabled = false;
@@ -138,44 +132,6 @@
 
         window.handleLogout = async () => { await signOut(auth); };
 
-        // --- UI UPDATER FUNCTION (CRUCIAL FIX) ---
-        window.updateUIUser = () => {
-            const elName = document.getElementById('header-username');
-            const dName = document.getElementById('desk-username');
-            const dRole = document.getElementById('desk-role');
-            const dAva = document.getElementById('desk-avatar');
-            
-            if(window.currentUser) {
-                // Update text
-                if(elName) elName.textContent = window.currentUser.name;
-                if(dName) dName.textContent = window.currentUser.name;
-                
-                // Update Role & Avatar
-                if(dRole) {
-                    dRole.textContent = window.currentUser.tier;
-                    dRole.classList.add('text-neon-purple');
-                }
-                if(dAva) {
-                    dAva.textContent = window.currentUser.name.charAt(0).toUpperCase();
-                    dAva.classList.remove('bg-gray-800');
-                    dAva.classList.add('bg-gradient-to-tr', 'from-neon-blue', 'to-neon-purple');
-                }
-            } else {
-                // Reset to Tamu
-                if(elName) elName.textContent = "Tamu";
-                if(dName) dName.textContent = "Tamu";
-                if(dRole) {
-                    dRole.textContent = "Klik untuk Login";
-                    dRole.classList.remove('text-neon-purple');
-                }
-                if(dAva) {
-                    dAva.textContent = "T";
-                    dAva.classList.remove('bg-gradient-to-tr', 'from-neon-blue', 'to-neon-purple');
-                    dAva.classList.add('bg-gray-800');
-                }
-            }
-        };
-
         // --- RESERVASI WHATSAPP ---
         window.handleBooking = () => {
             if (!auth.currentUser) return alert("Silakan Login terlebih dahulu!");
@@ -184,26 +140,28 @@
             const pax = document.getElementById('booking-pax').value;
             const name = window.currentUser.name;
 
-            if (!date || !pax) return alert("Mohon lengkapi data!");
+            if (!date || !pax) return alert("Mohon lengkapi data reservasi!");
 
             const message = `Halo Monokrom, saya *${name}* ingin reservasi meja.%0A%0ATanggal: ${date}%0APax: ${pax} Orang`;
             const phone = "6285864855878";
+            
             window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
         };
 
-        // --- EVENT MANAGER ---
+        // --- EVENT MANAGER (ADMIN) ---
         window.fetchEvents = async () => {
             try {
                 const q = query(collection(db, "events"), orderBy("date", "asc"));
                 const snap = await getDocs(q);
                 window.eventsList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                if(window.activeTab === 'home') window.switchTab('home');
+                if(window.activeTab === 'home') switchTab('home');
             } catch(e) { console.log(e); }
         };
 
         window.handleAddEvent = async (e) => {
             e.preventDefault();
             if(!confirm("Upload event ini?")) return;
+            
             try {
                 await addDoc(collection(db, "events"), {
                     title: document.getElementById('evt-title').value,
@@ -215,7 +173,7 @@
                 alert("Sukses Upload!");
                 e.target.reset();
                 window.fetchEvents();
-                window.switchTab('home');
+                switchTab('home');
             } catch(err) { alert("Gagal: " + err.message); }
         };
 
@@ -224,13 +182,80 @@
             try {
                 await deleteDoc(doc(db, "events", id));
                 window.fetchEvents();
-                window.switchTab('admin');
+                switchTab('admin');
             } catch(e) { alert("Gagal hapus"); }
         };
 
-        // --- RENDER FUNCTIONS (UI) ---
-        
-        // 1. HOME
+        // --- AUTH STATE LISTENER ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                const admins = ['admin@valify.app', 'roidnabil00@gmail.com'];
+                window.isAdmin = admins.includes(user.email);
+                
+                window.currentUser = {
+                    name: user.displayName || user.email.split('@')[0],
+                    email: user.email,
+                    tier: window.isAdmin ? 'ADMIN' : 'Member'
+                };
+            } else {
+                window.currentUser = null;
+                window.isAdmin = false;
+            }
+            window.renderNavigation();
+            window.updateUIUser();
+            window.fetchEvents();
+        });
+    </script>
+
+    <script>
+        // NAVIGATION RENDER
+        const renderNavigation = () => {
+            const deskNav = document.getElementById('desktop-nav');
+            deskNav.innerHTML = `
+                ${renderDeskBtn('home', 'home', 'Beranda')}
+                ${renderDeskBtn('menu', 'coffee', 'Menu')}
+                ${renderDeskBtn('reservasi', 'ticket', 'Reservasi')}
+                ${renderDeskBtn('event', 'calendar', 'Event')}
+                ${window.isAdmin ? renderDeskBtn('admin', 'shield-alert', 'Admin Panel', 'text-red-500') : ''}
+            `;
+
+            const mobNav = document.getElementById('mobile-nav');
+            mobNav.innerHTML = `
+                ${renderMobBtn('home', 'home', 'Beranda')}
+                ${renderMobBtn('menu', 'coffee', 'Menu')}
+                ${renderMobBtn('reservasi', 'ticket', 'Reservasi', true)}
+                ${renderMobBtn('event', 'calendar', 'Event')}
+                ${window.isAdmin ? renderMobBtn('admin', 'shield-alert', 'Admin') : renderMobBtn('profil', 'user', 'Profil')}
+            `;
+            lucide.createIcons();
+        }
+
+        const renderDeskBtn = (id, icon, label, color='') => `
+            <button onclick="switchTab('${id}')" class="desk-nav-btn w-full flex items-center gap-4 px-4 py-3 rounded-xl transition hover:bg-white/5 group ${window.activeTab === id ? 'bg-white/10 text-white' : 'text-gray-400'}" data-tab="${id}">
+                <i data-lucide="${icon}" class="w-5 h-5 ${color} group-hover:text-neon-blue transition-colors"></i>
+                <span class="font-medium">${label}</span>
+            </button>`;
+
+        const renderMobBtn = (id, icon, label, isMain=false) => {
+            const activeClass = window.activeTab === id ? 'text-white' : 'text-gray-500';
+            const iconColor = window.activeTab === id ? 'text-neon-blue' : 'text-gray-500';
+
+            if(isMain) return `
+                <button onclick="switchTab('${id}')" class="nav-btn w-full flex flex-col items-center justify-center transition-all group -mt-8">
+                    <div class="w-14 h-14 bg-gradient-to-tr from-neon-blue to-neon-purple rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(176,38,255,0.5)] border-4 border-black mb-1">
+                        <i data-lucide="${icon}" class="w-6 h-6 text-black"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-white tracking-wide">${label}</span>
+                </button>`;
+            
+            return `
+                <button onclick="switchTab('${id}')" class="nav-btn w-full flex flex-col items-center justify-center gap-1 transition-all group">
+                    <i data-lucide="${icon}" class="w-5 h-5 ${iconColor} group-hover:text-neon-blue transition-colors"></i>
+                    <span class="text-[10px] font-medium ${activeClass}">${label}</span>
+                </button>`;
+        }
+
+        // --- PAGES ---
         const renderHome = () => {
             const eventsHtml = window.eventsList.length > 0 ? window.eventsList.map(e => `
                 <a href="#" class="relative block h-64 rounded-2xl overflow-hidden group border border-white/5">
@@ -260,7 +285,6 @@
             </div>`;
         };
 
-        // 2. ADMIN
         const renderAdmin = () => `
             <div class="max-w-2xl mx-auto pb-10">
                 <div class="glass p-8 rounded-3xl mb-8">
@@ -281,7 +305,6 @@
                 </div>
             </div>`;
 
-        // 3. MENU
         const renderMenu = () => `
             <div class="animate-fade-in max-w-7xl mx-auto pb-10">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -292,15 +315,15 @@
             </div>`;
         const renderMenuCategory = (t, s, i, l) => `<a href="${l}" target="_blank" class="block relative h-64 rounded-2xl overflow-hidden group"><img src="${i}" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 transition duration-700"><div class="absolute bottom-6 left-6"><h3 class="text-3xl font-black">${t}</h3><p>${s}</p></div></a>`;
 
-        // 4. RESERVASI
+        // SCROLL FIX APPLIED HERE: py-10 instead of h-full/justify-center
         const renderReservasi = () => {
             const today = new Date().toISOString().split('T')[0];
             return `
-            <div class="animate-fade-in max-w-7xl mx-auto py-10">
+            <div class="animate-fade-in max-w-7xl mx-auto py-10"> 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
                     <div class="glass p-2 rounded-3xl relative group overflow-hidden">
                         <div class="relative aspect-square rounded-2xl overflow-hidden border border-white/10">
-                            <img src="vegas.png" class="object-cover w-full h-full opacity-80 group-hover:opacity-100 transition duration-700" alt="Floor Plan" onerror="this.src='https://via.placeholder.com/500?text=Denah'">
+                            <img src="vegas.png" class="object-cover w-full h-full opacity-80 group-hover:opacity-100 transition duration-700" alt="Floor Plan" onerror="this.src='https://images.unsplash.com/photo-1572116469696-31de0f17cc34?q=80&w=1974'">
                             <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
                             <div class="absolute bottom-6 left-0 w-full text-center">
                                 <h3 class="text-xl font-bold tracking-widest text-glow">FLOOR PLAN</h3>
@@ -332,7 +355,6 @@
             </div>`;
         };
 
-        // 5. PROFIL
         const renderProfil = () => {
             if (window.currentUser) {
                 return `<div class="max-w-md mx-auto pt-10 text-center glass p-8 rounded-3xl pb-10">
@@ -356,7 +378,6 @@
             }
         };
 
-        // --- NAVIGATION LOGIC ---
         window.switchTab = (id) => {
             window.activeTab = id;
             document.getElementById('main-content').innerHTML = 
@@ -370,80 +391,31 @@
             renderNavigation();
         };
 
-        const renderNavigation = () => {
-            const deskNav = document.getElementById('desktop-nav');
-            deskNav.innerHTML = `
-                ${renderDeskBtn('home', 'home', 'Beranda')}
-                ${renderDeskBtn('menu', 'coffee', 'Menu')}
-                ${renderDeskBtn('reservasi', 'ticket', 'Reservasi')}
-                ${renderDeskBtn('event', 'calendar', 'Event')}
-                ${window.isAdmin ? renderDeskBtn('admin', 'shield-alert', 'Admin Panel', 'text-red-500') : ''}
-            `;
-
-            const mobNav = document.getElementById('mobile-nav');
-            mobNav.innerHTML = `
-                ${renderMobBtn('home', 'home', 'Beranda')}
-                ${renderMobBtn('menu', 'coffee', 'Menu')}
-                ${renderMobBtn('reservasi', 'ticket', 'Reservasi', true)}
-                ${renderMobBtn('event', 'calendar', 'Event')}
-                ${window.isAdmin ? renderMobBtn('admin', 'shield-alert', 'Admin') : renderMobBtn('profil', 'user', 'Profil')}
-            `;
-            lucide.createIcons();
-        };
-
-        const renderDeskBtn = (id, icon, label, color='') => `
-            <button onclick="switchTab('${id}')" class="desk-nav-btn w-full flex items-center gap-4 px-4 py-3 rounded-xl transition hover:bg-white/5 group ${window.activeTab === id ? 'bg-white/10 text-white' : 'text-gray-400'}" data-tab="${id}">
-                <i data-lucide="${icon}" class="w-5 h-5 ${color} group-hover:text-neon-blue transition-colors"></i>
-                <span class="font-medium">${label}</span>
-            </button>`;
-
-        const renderMobBtn = (id, icon, label, isMain=false) => {
-            const activeClass = window.activeTab === id ? 'text-white' : 'text-gray-500';
-            const iconColor = window.activeTab === id ? 'text-neon-blue' : 'text-gray-500';
-
-            if(isMain) return `
-                <button onclick="switchTab('${id}')" class="nav-btn w-full flex flex-col items-center justify-center transition-all group -mt-8">
-                    <div class="w-14 h-14 bg-gradient-to-tr from-neon-blue to-neon-purple rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(176,38,255,0.5)] border-4 border-black mb-1">
-                        <i data-lucide="${icon}" class="w-6 h-6 text-black"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-white tracking-wide">${label}</span>
-                </button>`;
+        window.updateUIUser = () => {
+            const elName = document.getElementById('header-username');
+            const dName = document.getElementById('desk-username');
+            const dRole = document.getElementById('desk-role');
+            const dAva = document.getElementById('desk-avatar');
             
-            return `
-                <button onclick="switchTab('${id}')" class="nav-btn w-full flex flex-col items-center justify-center gap-1 transition-all group">
-                    <i data-lucide="${icon}" class="w-5 h-5 ${iconColor} group-hover:text-neon-blue transition-colors"></i>
-                    <span class="text-[10px] font-medium ${activeClass}">${label}</span>
-                </button>`;
+            if(window.currentUser) {
+                elName.innerText = window.currentUser.name;
+                dName.innerText = window.currentUser.name;
+                dRole.innerText = window.currentUser.tier;
+                dAva.innerText = window.currentUser.name[0];
+                dRole.classList.add('text-neon-purple');
+            } else {
+                elName.innerText = "Tamu";
+                dName.innerText = "Tamu";
+                dRole.innerText = "Klik untuk Login";
+                dAva.innerText = "T";
+                dRole.classList.remove('text-neon-purple');
+            }
         };
 
-        // --- STARTUP LOGIC ---
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // List Email Admin
-                const admins = ['admin@valify.app', 'roidnabil00@gmail.com'];
-                window.isAdmin = admins.includes(user.email);
-                
-                // Gunakan displayName jika ada, jika tidak pakai email
-                const displayName = user.displayName ? user.displayName : user.email.split('@')[0];
-
-                window.currentUser = {
-                    name: displayName,
-                    email: user.email,
-                    tier: window.isAdmin ? 'ADMIN' : 'Member'
-                };
-            } else {
-                window.currentUser = null;
-                window.isAdmin = false;
-            }
-            // UPDATE SEMUA UI SETELAH DAPAT DATA
-            window.renderNavigation();
-            window.updateUIUser();
-            window.fetchEvents();
-        });
-
-        // INIT LOAD
+        // INITIALIZE
         window.onload = () => {
-            window.switchTab('home');
+            switchTab('home');
+            window.fetchEvents();
         };
     </script>
 </body>
